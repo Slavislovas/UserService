@@ -1,6 +1,9 @@
 package com.fitnessapp.userservice.business.handler;
 
 import javax.servlet.http.HttpServletRequest;
+
+import com.fitnessapp.userservice.business.handler.exception.DuplicateDataException;
+import com.fitnessapp.userservice.business.handler.exception.InvalidDataException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,5 +22,15 @@ public class CustomExceptionHandler {
                                                LocalDate.now(),
                                                request.getRequestURI());
         return new ResponseEntity<ErrorModel>(errorModel, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DuplicateDataException.class)
+    public ResponseEntity<FormErrorModel> handleDuplicateDataException(DuplicateDataException ex){
+        return new ResponseEntity<FormErrorModel>(ex.getErrorModel(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidDataException.class)
+    public ResponseEntity<FormErrorModel> handleInvalidDataException(InvalidDataException ex){
+        return new ResponseEntity<FormErrorModel>(ex.getErrorModel(), HttpStatus.BAD_REQUEST);
     }
 }

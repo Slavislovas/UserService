@@ -1,6 +1,9 @@
 package com.fitnessapp.userservice.web;
 
+import com.fitnessapp.userservice.business.handler.FormErrorModel;
+import com.fitnessapp.userservice.business.handler.exception.InvalidDataException;
 import com.fitnessapp.userservice.business.service.UserService;
+import com.fitnessapp.userservice.model.UserCreationDto;
 import com.fitnessapp.userservice.model.UserDto;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -8,10 +11,17 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/user")
@@ -26,7 +36,7 @@ public class UserController {
     })
     @GetMapping("/findById/{id}")
     public ResponseEntity<UserDto> findUserById(@ApiParam(value = "Id of the user")
-                                                    @PathVariable("id") Long userId){
+                                                    @PathVariable("id") String userId){
         return ResponseEntity.ok(userService.findUserById(userId));
     }
 
@@ -39,5 +49,36 @@ public class UserController {
     public ResponseEntity<UserDto> findUserByUsername(@ApiParam(value = "username of the user")
                                                           @PathVariable("username") String username){
         return ResponseEntity.ok(userService.findByUsername(username));
+    }
+
+    @ApiOperation(value = "Finds all user data")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Request successful"),
+    })
+    @GetMapping("/findAll")
+    public ResponseEntity<List<UserDto>> findAllUsers(){
+        return ResponseEntity.ok(userService.findAllUsers());
+    }
+
+    @ApiOperation(value = "creates a new user")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Request successful"),
+            @ApiResponse(code = 400, message = "Bad request"),
+            @ApiResponse(code = 409, message = "Username and/or email is taken"),
+    })
+    @PostMapping("/create")
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserCreationDto userCreationDto, BindingResult bindingResult){
+        if (bindingResult.hasErrors()){
+            buildFormErrorModelAndThrowException(bindingResult);
+        }
+        return ResponseEntity.ok(userService.createUser(userCreationDto));
+    }
+
+    private static void buildFormErrorModelAndThrowException(BindingResult bindingResult) {
+        FormErrorModel formErrorModel = new FormErrorModel();
+        for (FieldError fieldError : bindingResult.getFieldErrors()) {
+            formErrorModel.addFormError(fieldError.getField(), fieldError.getDefaultMessage());
+        }
+        throw new InvalidDataException(formErrorModel);
     }
 }

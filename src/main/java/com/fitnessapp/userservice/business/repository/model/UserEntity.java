@@ -17,8 +17,7 @@ import java.time.LocalDate;
 public class UserEntity {
 
     @Id
-    @Field("id")
-    private Long id;
+    private String id;
 
     @Field("name")
     private String name;

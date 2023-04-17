@@ -22,7 +22,7 @@ import java.time.LocalDate;
 public class UserDto {
     @NotNull
     @ApiModelProperty(name = "id", notes = "id of the user", example = "123")
-    private Long id;
+    private String id;
 
     @NotNull
     @NotBlank
