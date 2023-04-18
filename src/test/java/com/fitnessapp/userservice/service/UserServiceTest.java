@@ -8,6 +8,7 @@ import com.fitnessapp.userservice.business.repository.model.UserEntity;
 import com.fitnessapp.userservice.business.service.impl.UserServiceImpl;
 import com.fitnessapp.userservice.model.UserCreationDto;
 import com.fitnessapp.userservice.model.UserDto;
+import com.fitnessapp.userservice.model.UserEditDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -39,10 +40,13 @@ public class UserServiceTest {
     UserServiceImpl userService;
 
     UserEntity userEntity;
+    UserEntity editedUserEntity;
     UserEntity userEntity2;
     UserDto userDto;
+    UserDto editedUserDto;
     UserDto userDto2;
     UserCreationDto userCreationDto;
+    UserEditDto userEditDto;
 
     @BeforeEach
     void init(){
@@ -52,6 +56,15 @@ public class UserServiceTest {
                 "TestSurname",
                 LocalDate.now(),
                 "TestEmail@gmail.com",
+                "TestUsername",
+                "$2a$12$MoUsV1PVKz47hfzEiBF7Mef5f8AScPFGI/G4vjC1VvE60Md5yX7K.", // password: Test@123
+                Role.ROLE_USER);
+
+        editedUserEntity = new UserEntity("1L",
+                "EditTestName",
+                "EditTestSurname",
+                LocalDate.now(),
+                "EditTestEmail@gmail.com",
                 "TestUsername",
                 "$2a$12$MoUsV1PVKz47hfzEiBF7Mef5f8AScPFGI/G4vjC1VvE60Md5yX7K.", // password: Test@123
                 Role.ROLE_USER);
@@ -72,6 +85,13 @@ public class UserServiceTest {
                 "TestEmail@Gmail.com",
                 "TestUsername");
 
+        editedUserDto = new UserDto("1L",
+                "EditTestName",
+                "EditTestSurname",
+                LocalDate.now(),
+                "EditTestEmail@gmail.com",
+                "TestUsername");
+
         userDto2 = new UserDto("2L",
                 "TestName2",
                 "TestSurname2",
@@ -85,6 +105,11 @@ public class UserServiceTest {
                 "TestEmail@gmail.com",
                 "TestUsername",
                 "Test@123");
+
+        userEditDto = new UserEditDto("EditTestName",
+                "EditTestSurname",
+                LocalDate.now(),
+                "EditTestEmail@gmail.com");
     }
 
     @Test
@@ -154,5 +179,30 @@ public class UserServiceTest {
         Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
         Mockito.when(userRepository.findByEmail(any())).thenReturn(Optional.of(userEntity));
         assertThrows(DuplicateDataException.class, () -> userService.createUser(userCreationDto));
+    }
+
+    @Test
+    void editUserSuccess(){
+        Mockito.when(userRepository.save(any())).thenReturn(editedUserEntity);
+        Mockito.when(userMapStruct.entityToDto(any())).thenReturn(editedUserDto);
+        Mockito.when(userRepository.findById(any())).thenReturn(Optional.ofNullable(userEntity));
+        Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
+        Mockito.when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
+        UserDto result = userService.editUser("1L", userEditDto);
+        assertEquals(editedUserDto, result);
+    }
+
+    @Test
+    void editUserNotFoundException(){
+        Mockito.when(userRepository.findById(any())).thenReturn(Optional.empty());
+        assertThrows(NoSuchElementException.class, () -> userService.editUser("1L", userEditDto));
+    }
+
+    @Test
+    void editUserDuplicateEmailException(){
+        Mockito.when(userRepository.findById(any())).thenReturn(Optional.of(userEntity));
+        Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        Mockito.when(userRepository.findByEmail(any())).thenReturn(Optional.of(userEntity2));
+        assertThrows(DuplicateDataException.class, () -> userService.editUser("1L", userEditDto));
     }
 }

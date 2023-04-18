@@ -9,6 +9,7 @@ import com.fitnessapp.userservice.business.repository.model.UserEntity;
 import com.fitnessapp.userservice.business.service.UserService;
 import com.fitnessapp.userservice.model.UserCreationDto;
 import com.fitnessapp.userservice.model.UserDto;
+import com.fitnessapp.userservice.model.UserEditDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -59,13 +60,31 @@ public class UserServiceImpl implements UserService {
         return userMapStruct.entityToDto(userRepository.save(userEntity));
     }
 
+    @Override
+    public UserDto editUser(String id, UserEditDto userEditDto) {
+        Optional<UserEntity> optionalUserEntity = userRepository.findById(id);
+        if (optionalUserEntity.isEmpty()){
+            throw new NoSuchElementException("User with id: " + id +" does not exist");
+        }
+        UserEntity user = optionalUserEntity.get();
+        if (!user.getEmail().equals(userEditDto.getEmail())){
+            checkForDuplicateData(null, userEditDto.getEmail());
+        }
+        user.setName(userEditDto.getName());
+        user.setSurname(userEditDto.getSurname());
+        user.setDateOfBirth(userEditDto.getDateOfBirth());
+        user.setEmail(userEditDto.getEmail());
+        return userMapStruct.entityToDto(userRepository.save(user));
+
+    }
+
     private void checkForDuplicateData(String dtoUsername, String dtoEmail) {
         FormErrorModel formErrorModel = new FormErrorModel();
-        if (userRepository.findByUsername(dtoUsername).isPresent()){
+        if (dtoUsername != null && userRepository.findByUsername(dtoUsername).isPresent()){
             formErrorModel.addFormError("username", "username is taken");
         }
 
-        if (userRepository.findByEmail(dtoEmail).isPresent()){
+        if (dtoEmail != null && userRepository.findByEmail(dtoEmail).isPresent()){
             formErrorModel.addFormError("email", "email is taken");
         }
 

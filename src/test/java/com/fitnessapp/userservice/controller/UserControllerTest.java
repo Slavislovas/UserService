@@ -7,6 +7,7 @@ import com.fitnessapp.userservice.business.repository.model.UserEntity;
 import com.fitnessapp.userservice.business.service.UserService;
 import com.fitnessapp.userservice.model.UserCreationDto;
 import com.fitnessapp.userservice.model.UserDto;
+import com.fitnessapp.userservice.model.UserEditDto;
 import com.fitnessapp.userservice.web.UserController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,7 @@ class UserControllerTest {
     UserDto userDto;
     UserDto userDto2;
     UserCreationDto userCreationDto;
+    UserEditDto userEditDto;
 
     @BeforeEach
     void init(){
@@ -87,6 +89,11 @@ class UserControllerTest {
                 "TestEmail@gmail.com",
                 "TestUsername",
                 "$2a$12$MoUsV1PVKz47hfzEiBF7Mef5f8AScPFGI/G4vjC1VvE60Md5yX7K."); // password: Test@123
+
+        userEditDto = new UserEditDto("EditTestName",
+                "EditTestSurname",
+                LocalDate.now(),
+                "EditTestEmail@gmail.com");
     }
 
     @Test
@@ -145,5 +152,34 @@ class UserControllerTest {
         MapBindingResult mapBindingResult = new MapBindingResult(Collections.emptyMap(), "errors");
         mapBindingResult.addError(new ObjectError("email", "must be a well-formed email"));
         assertThrows(InvalidDataException.class, () -> userController.createUser(userCreationDto, mapBindingResult));
+    }
+
+    @Test
+    void editUserSuccess(){
+        userDto.setName(userEditDto.getName());
+        userDto.setSurname(userEditDto.getSurname());
+        userDto.setEmail(userEditDto.getEmail());
+        userDto.setDateOfBirth(userEditDto.getDateOfBirth());
+        Mockito.when(userService.editUser(any(), any())).thenReturn(userDto);
+        ResponseEntity<UserDto> result = userController.editUser("1L", userEditDto, new MapBindingResult(Collections.emptyMap(), "errors"));
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(userDto, result.getBody());
+    }
+
+    @Test
+    void editUserDuplicateEmailException(){
+        userDto.setName(userEditDto.getName());
+        userDto.setSurname(userEditDto.getSurname());
+        userDto.setEmail(userEditDto.getEmail());
+        userDto.setDateOfBirth(userEditDto.getDateOfBirth());
+        Mockito.when(userService.editUser(any(), any())).thenThrow(DuplicateDataException.class);
+        assertThrows(DuplicateDataException.class, () -> userController.editUser("1L", userEditDto, new MapBindingResult(Collections.emptyMap(), "errors")));
+    }
+
+    @Test
+    void editUserInvalidDataException(){
+        MapBindingResult mapBindingResult = new MapBindingResult(Collections.emptyMap(), "errors");
+        mapBindingResult.addError(new ObjectError("email", "must be a well-formed email"));
+        assertThrows(InvalidDataException.class, () -> userController.editUser("1L", userEditDto, mapBindingResult));
     }
 }

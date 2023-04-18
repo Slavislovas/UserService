@@ -5,6 +5,7 @@ import com.fitnessapp.userservice.business.handler.exception.InvalidDataExceptio
 import com.fitnessapp.userservice.business.service.UserService;
 import com.fitnessapp.userservice.model.UserCreationDto;
 import com.fitnessapp.userservice.model.UserDto;
+import com.fitnessapp.userservice.model.UserEditDto;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
@@ -16,6 +17,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -72,6 +74,23 @@ public class UserController {
             buildFormErrorModelAndThrowException(bindingResult);
         }
         return ResponseEntity.ok(userService.createUser(userCreationDto));
+    }
+
+    @ApiOperation(value = "edits user data")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Request successful"),
+            @ApiResponse(code = 400, message = "Bad request"),
+            @ApiResponse(code = 404, message = "User not found"),
+            @ApiResponse(code = 409, message = "Email is taken"),
+    })
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<UserDto> editUser(@PathVariable("id") String id,
+                                            @Valid @RequestBody UserEditDto userCreationDto,
+                                            BindingResult bindingResult){
+        if (bindingResult.hasErrors()){
+            buildFormErrorModelAndThrowException(bindingResult);
+        }
+        return ResponseEntity.ok(userService.editUser(id, userCreationDto));
     }
 
     private static void buildFormErrorModelAndThrowException(BindingResult bindingResult) {
