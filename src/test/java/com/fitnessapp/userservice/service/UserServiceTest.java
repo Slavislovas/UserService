@@ -25,6 +25,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 
 public class UserServiceTest {
     @Mock
@@ -204,5 +205,20 @@ public class UserServiceTest {
         Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
         Mockito.when(userRepository.findByEmail(any())).thenReturn(Optional.of(userEntity2));
         assertThrows(DuplicateDataException.class, () -> userService.editUser("1L", userEditDto));
+    }
+
+    @Test
+    void deleteUserSuccessful(){
+        Mockito.when(userRepository.findById(any())).thenReturn(Optional.of(userEntity));
+        doNothing().when(userRepository).deleteById(any());
+        String result = userService.deleteUserById("1L");
+        assertEquals("User with id: 1L has been deleted successfully", result);
+    }
+
+    @Test
+    void deleteUserNotFoundException(){
+        Mockito.when(userRepository.findById(any())).thenReturn(Optional.empty());
+        doNothing().when(userRepository).deleteById(any());
+        assertThrows(NoSuchElementException.class, () -> userService.deleteUserById("1L"));
     }
 }

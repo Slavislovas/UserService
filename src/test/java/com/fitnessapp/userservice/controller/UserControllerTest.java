@@ -182,4 +182,18 @@ class UserControllerTest {
         mapBindingResult.addError(new ObjectError("email", "must be a well-formed email"));
         assertThrows(InvalidDataException.class, () -> userController.editUser("1L", userEditDto, mapBindingResult));
     }
+
+    @Test
+    void deleteUserSuccess(){
+        Mockito.when(userService.deleteUserById(any())).thenReturn("User with id: 1L has been deleted successfully");
+        ResponseEntity<String> result = userController.deleteUserById("1L");
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("User with id: 1L has been deleted successfully", result.getBody());
+    }
+
+    @Test
+    void deleteUserNotFoundException(){
+        Mockito.when(userService.deleteUserById(any())).thenThrow(NoSuchElementException.class);
+        assertThrows(NoSuchElementException.class, () -> userController.deleteUserById("1L"));
+    }
 }

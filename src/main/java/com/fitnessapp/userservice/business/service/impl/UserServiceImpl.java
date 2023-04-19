@@ -78,6 +78,16 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public String deleteUserById(String id) {
+        Optional<UserEntity> optionalUserEntity = userRepository.findById(id);
+        if (optionalUserEntity.isEmpty()){
+            throw new NoSuchElementException("User with id: " + id + " does not exist");
+        }
+        userRepository.deleteById(id);
+        return "User with id: " + id + " has been deleted successfully";
+    }
+
     private void checkForDuplicateData(String dtoUsername, String dtoEmail) {
         FormErrorModel formErrorModel = new FormErrorModel();
         if (dtoUsername != null && userRepository.findByUsername(dtoUsername).isPresent()){

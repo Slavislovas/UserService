@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -99,5 +100,15 @@ public class UserController {
             formErrorModel.addFormError(fieldError.getField(), fieldError.getDefaultMessage());
         }
         throw new InvalidDataException(formErrorModel);
+    }
+
+    @ApiOperation(value = "deletes user data")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Request successful"),
+            @ApiResponse(code = 404, message = "User not found"),
+    })
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteUserById(@PathVariable("id") String id){
+        return ResponseEntity.ok(userService.deleteUserById(id));
     }
 }

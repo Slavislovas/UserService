@@ -32,6 +32,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -356,5 +357,30 @@ public class UserIntegrationTest {
                 .getErrors();
         assertTrue(expectedErrorList.containsAll(resultErrorList) && resultErrorList.containsAll(expectedErrorList));
 
+    }
+
+    @Test
+    void deleteUserByIdSuccess() throws Exception {
+        Mockito.when(userRepository.findById(any())).thenReturn(Optional.of(userEntity));
+        doNothing().when(userRepository).deleteById(any());
+        MvcResult mvcResult = mockMvc.perform(delete("/user/delete/1L"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertEquals("User with id: 1L has been deleted successfully", mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void deleteUserByIdUserNotFoundException() throws Exception {
+        Mockito.when(userRepository.findById(any())).thenReturn(Optional.empty());
+        doNothing().when(userRepository).deleteById(any());
+        ErrorModel expectedErrorModel = new ErrorModel(HttpStatus.NOT_FOUND.value(),
+                "User with id: 1L does not exist",
+                LocalDate.now(),
+                "/user/delete/1L");
+        MvcResult mvcResult = mockMvc.perform(delete("/user/delete/1L"))
+                .andExpect(status().isNotFound())
+                .andReturn();
+        assertEquals(expectedErrorModel, new ObjectMapper().registerModule(new JavaTimeModule())
+                .readValue(mvcResult.getResponse().getContentAsString(), ErrorModel.class));
     }
 }
